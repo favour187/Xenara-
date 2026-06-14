@@ -1,0 +1,44 @@
+# Render Blueprint for Xenara
+# Deploy: push this repo to GitHub, then in Render click "New +" > "Blueprint"
+# and point it at the repo. Render reads this file automatically.
+
+services:
+  - type: web
+    name: xenara
+    runtime: node
+    plan: free
+    # Build the React client, then install server deps.
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true # Render generates a secure random secret
+      - key: DATA_DIR
+        value: /var/data
+      # Optional: connect a real LLM (OpenAI-compatible). Set in dashboard.
+      - key: XENARA_MODEL_URL
+        sync: false
+      - key: XENARA_MODEL_KEY
+        sync: false
+      - key: XENARA_MODEL_NAME
+        sync: false
+      # Web research is keyless by default. Optional premium search providers:
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: BRAVE_API_KEY
+        sync: false
+      # Set to "off" to fully disable web access.
+      - key: XENARA_WEB
+        sync: false
+      # Continual learning: every question trains the model. "off" to disable.
+      - key: XENARA_LEARN
+        sync: false
+    # Persistent disk so the SQLite database & chat history survive deploys.
+    disk:
+      name: xenara-data
+      mountPath: /var/data
+      sizeGB: 1
